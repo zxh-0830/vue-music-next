@@ -9,9 +9,18 @@ import { ref } from 'vue'
 import useScroll from './use-scroll'
 export default {
   name: 'scroll',
-  setup() {
+  props: {
+    click: {
+      type: Boolean,
+      default: true
+    }
+  },
+  setup(props) {
     const rootRef = ref(null)
-    useScroll(rootRef)
+    useScroll(rootRef, props)
+    return {
+      rootRef
+    }
   },
   data() {
     return {
