@@ -10,6 +10,19 @@
       ref="bgImage"
     >
       <div
+        class="play-btn-wrapper"
+        :style="playBtnStyle"
+      >
+        <div
+        v-show="songs.length > 0"
+        class="play-btn"
+        @click="random"
+        >
+          <i class="icon-play"></i>
+          <span class="text">随机播放全部</span>
+        </div>
+      </div>
+      <div
         class="filter"
         :style="filterStyle"
       >
@@ -19,12 +32,14 @@
       class="list"
       :style="scrollStyle"
       v-loading="loading"
+      v-no-result:[noResultText]="noResult"
       :probe-type="3"
       @scroll="onScroll"
     >
       <div class="song-list-wrapper">
         <song-list
           :songs="songs"
+          @select="selectItem"
         >
         </song-list>
       </div>
@@ -35,6 +50,7 @@
 <script>
 import SongList from '@/components/base/song-list/song-list.vue'
 import Scroll from '@/components/base/scroll/scroll.vue'
+import { mapActions } from 'vuex'
 
 const RESERVED_HEIGHT = 40
 
@@ -53,7 +69,11 @@ export default {
     },
     title: String,
     pic: String,
-    loading: Boolean
+    loading: Boolean,
+    noResultText: {
+      type: String,
+      default: '抱歉，没有找到可播放的歌曲 '
+    }
   },
   data() {
     return {
@@ -63,6 +83,18 @@ export default {
     }
   },
   computed: {
+    noResult() {
+      return !this.loading && !this.songs.length
+    },
+    playBtnStyle() {
+      let display = ''
+      if (this.scrollY >= this.maxTranslateY) {
+        display = 'none'
+      }
+      return {
+        display
+      }
+    },
     bgImageStyle() {
       const scrollY = this.scrollY
       let zIndex = 0
@@ -114,7 +146,20 @@ export default {
     },
     onScroll(pos) {
       this.scrollY = -pos.y
-    }
+    },
+    selectItem({ item, index }) {
+      this.selectPlay({
+        list: this.songs,
+        index
+      })
+    },
+    random() {
+      this.randomPlay(this.songs)
+    },
+    ...mapActions([
+      'selectPlay',
+      'randomPlay'
+    ])
   }
 }
 </script>
