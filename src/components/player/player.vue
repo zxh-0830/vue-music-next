@@ -18,6 +18,15 @@
         <h2 class="subtitle">{{ currentSong.singer}}</h2>
       </div>
       <div class="bottom">
+        <div class="progress-wrapper">
+          <span class="time time-l">{{ formatTime(currentTime)}}</span>
+          <div class="progress-bar-wrapper">
+            <progress-bar
+              :progress="progress"
+            ></progress-bar>
+          </div>
+          <span class="time time-r">{{ formatTime(currentSong.duration) }}</span>
+        </div>
         <div class="operators">
           <div class="icon i-left">
             <i @click="changeMode" :class="modeIcon"></i>
@@ -42,6 +51,7 @@
       @pause="pause"
       @canplay="ready"
       @error="error"
+      @timeupdate="updateTime"
     ></audio>
   </div>
 </template>
@@ -51,12 +61,16 @@ import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import progressBar from './progress-bar.vue'
+import { formatTime } from '@/assets/js/util'
 
 export default {
+  components: { progressBar },
   name: 'player',
   setup() {
     const audioRef = ref(null)
     const songReady = ref(false)
+    const currentTime = ref(0)
 
     const store = useStore()
     const fullScreen = computed(() => store.state.fullScreen)
@@ -70,6 +84,9 @@ export default {
     const disableCls = computed(() => {
       return songReady.value ? '' : 'disable'
     })
+    const progress = computed(() => {
+      return currentTime.value / currentSong.value.duration
+    })
 
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
@@ -78,6 +95,7 @@ export default {
       if (!newSong.id || !newSong.url) {
         return
       }
+      currentTime.value = 0
       songReady.value = false
       const audioEl = audioRef.value
       audioEl.src = newSong.url
@@ -154,11 +172,16 @@ export default {
     function error() {
       songReady.value = true
     }
+    function updateTime(e) {
+      currentTime.value = e.target.currentTime
+    }
 
     return {
       audioRef,
       fullScreen,
       currentSong,
+      currentTime,
+      progress,
       playIcon,
       disableCls,
       goBack,
@@ -168,6 +191,8 @@ export default {
       next,
       ready,
       error,
+      updateTime,
+      formatTime,
       // usemode
       modeIcon,
       changeMode,
@@ -240,6 +265,29 @@ export default {
         position: absolute;
         bottom: 50px;
         width: 100%;
+        .progress-wrapper {
+          display: flex;
+          align-items: center;
+          width: 80%;
+          margin: 0px auto;
+          padding: 10px 0;
+          .time {
+            color: $color-text;
+            font-size: $font-size-small;
+            flex: 0 0 40px;
+            line-height: 30px;
+            width: 40px;
+            &.time-l {
+              text-align: left;
+            }
+            &.time-r {
+              text-align: right;
+            }
+          }
+          .progress-bar-wrapper {
+            flex: 1;
+          }
+        }
         .operators {
           display: flex;
           align-items: center;
