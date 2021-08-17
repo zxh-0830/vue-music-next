@@ -1,15 +1,20 @@
 <template>
   <div
     class="progress-bar"
+    @click="onClick"
   >
     <div class="bar-inner">
       <div
         class="progress"
+        ref="progress"
         :style="progressStyle"
       ></div>
       <div
         class="progress-btn-wrapper"
         :style="btnStyle"
+        @touchstart.prevent="onTouchStart"
+        @touchmove.prevent="onTouchMove"
+        @touchend.prevent="onTouchEnd"
       >
         <div class="progress-btn"></div>
       </div>
@@ -27,6 +32,7 @@ export default {
       default: 0
     }
   },
+  emits: ['progress-changing', 'progress-changed'],
   data() {
     return {
       offset: 0 // 偏移量 表示当前进度
@@ -46,6 +52,35 @@ export default {
     progress(newProgress) {
       const barWidth = this.$el.clientWidth - progressBtnWidth
       this.offset = barWidth * newProgress
+    }
+  },
+  created() {
+    this.touch = {}
+  },
+  methods: {
+    onTouchStart(e) {
+      this.touch.x1 = e.touches[0].pageX
+      this.touch.beginWidth = this.$refs.progress.clientWidth
+    },
+    onTouchMove(e) {
+      const delta = e.touches[0].pageX - this.touch.x1
+      const tempWidth = this.touch.beginWidth + delta
+      const barWidth = this.$el.clientWidth - progressBtnWidth
+      const progress = Math.min(1, Math.max(tempWidth / barWidth, 0)) // 限定 progress的范围为 0~1
+      this.offset = barWidth * progress
+      this.$emit('progress-changing', progress)
+    },
+    onTouchEnd(e) {
+      const barWidth = this.$el.clientWidth - progressBtnWidth
+       const progress = this.$refs.progress.clientWidth / barWidth
+       this.$emit('progress-changed', progress)
+    },
+    onClick(e) {
+      const rect = this.$el.getBoundingClientRect()
+      const offsetWidth = e.pageX - rect.left
+      const barWidth = this.$el.clientWidth - progressBtnWidth
+      const progress = offsetWidth / barWidth
+      this.$emit('progress-changed', progress)
     }
   }
 
