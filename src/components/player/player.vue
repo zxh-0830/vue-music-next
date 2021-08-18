@@ -17,6 +17,22 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer}}</h2>
       </div>
+      <div class="middle">
+        <div class="middle-l">
+          <div class="cd-wrapper">
+            <div
+              ref="cdRef"
+              class="cd"
+              >
+              <img
+                ref="cdImageRef"
+                class="image"
+                :class="cdCls"
+                :src="currentSong.pic">
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="bottom">
         <div class="progress-wrapper">
           <span class="time time-l">{{ formatTime(currentTime)}}</span>
@@ -64,6 +80,7 @@ import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import useCD from './use-cd'
 import progressBar from './progress-bar.vue'
 import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant.js'
@@ -96,6 +113,7 @@ export default {
 
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
+    const { cdCls, cdRef, cdImageRef } = useCD()
 
     watch(currentSong, (newSong) => {
       if (!newSong.id || !newSong.url) {
@@ -230,7 +248,11 @@ export default {
       changeMode,
       // useFavorite
       getFavoriteIcon,
-      toggleFavorite
+      toggleFavorite,
+      // useCD
+      cdCls,
+      cdRef,
+      cdImageRef
     }
   }
 }
@@ -291,6 +313,50 @@ export default {
           text-align: center;
           font-size: $font-size-medium;
           color: $color-text;
+        }
+      }
+      .middle {
+        position: fixed;
+        width: 100%;
+        top: 80px;
+        bottom:170px;
+        white-space: nowrap;
+        font-size: 0;
+        .middle-l {
+          display:inline-block;
+          vertical-align: top;
+          position: relative;
+          width: 100%;
+          height: 0;
+          padding-top: 80%;
+          // box-sizing: border-box;
+          .cd-wrapper {
+            position: absolute;
+            left: 10%;
+            top: 0;
+            width: 80%;
+            box-sizing: border-box;
+            height: 100%;
+            .cd {
+              width: 100%;
+              height: 100%;
+              border-radius: 50%;
+            img {
+              position:absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
+              border-radius: 50%;
+              border: 10px solid rgba(255, 255,255, 0.1);
+            }
+            .playing {
+              animation: rotate 20s linear infinite;
+            }
+          }
+          }
+
         }
       }
       .bottom {
