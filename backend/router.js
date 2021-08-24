@@ -8,6 +8,7 @@ const getSecuritySign = require('./sign')
 const pinyin = require('pinyin')
 const ERR_OK = 0
 const token = 5381
+const Base64 = require('js-base64').Base64
 
 // 歌曲图片加载失败时 使用 默认图片
 const fallbackPicUrl = 'https://y.gtimg.cn/mediastyle/music_v11/extra/default_300x300.jpg?max_age=31536000'
@@ -108,6 +109,8 @@ function registerRouter(app) {
   registerSingerDetail(app)
 
   registerSongUrl(app)
+
+  registerLyric(app)
 }
 
 // 注册推荐列表接口路由
@@ -405,6 +408,32 @@ function registerSongUrl(app) {
           map: urlMap
         }
       })
+    })
+  })
+}
+
+// 注册歌词接口
+function registerLyric(app) {
+  app.get('/api/getLyric', (req, res) => {
+    const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
+
+    get(url, {
+      '-': 'MusicJsonCallback_lrc',
+      pcachetime: +new Date(),
+      songmid: req.query.mid,
+      g_tk_new_20200303: token
+    }).then((response) => {
+      const data = response.data
+      if (data.code === ERR_OK) {
+        res.json({
+          code: ERR_OK,
+          result: {
+            lyric: Base64.decode(data.lyric)
+          }
+        })
+      } else {
+        res.json(data)
+      }
     })
   })
 }
