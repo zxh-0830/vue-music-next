@@ -32,6 +32,23 @@
             </div>
           </div>
         </div>
+        <scroll
+          class="middle-r"
+          ref="lyricScrollRef"
+        >
+          <div class="lyric-wrapper">
+            <div v-if="currentLyric" ref="lyricListRef">
+              <p
+                class="text"
+                :class="{'current': currentLineNum === index}"
+                v-for="(line, index) in currentLyric.lines"
+                :key="line.num"
+              >
+                {{line.txt}}
+              </p>
+            </div>
+          </div>
+        </scroll>
       </div>
       <div class="bottom">
         <div class="progress-wrapper">
@@ -85,9 +102,13 @@ import useLyric from './use-lyric'
 import progressBar from './progress-bar.vue'
 import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant.js'
+import Scroll from '@/components/base/scroll/scroll.vue'
 
 export default {
-  components: { progressBar },
+  components: {
+    progressBar,
+    Scroll
+},
   name: 'player',
   setup() {
     const audioRef = ref(null)
@@ -115,7 +136,7 @@ export default {
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
     const { cdCls, cdRef, cdImageRef } = useCD()
-    useLyric()
+    const { currentLyric, currentLineNum, playLyric, stopLyric, lyricScrollRef, lyricListRef } = useLyric({ songReady, currentTime })
 
     watch(currentSong, (newSong) => {
       if (!newSong.id || !newSong.url) {
@@ -132,7 +153,13 @@ export default {
         return
       }
       const audioEl = audioRef.value
-      newPlaying ? audioEl.play() : audioEl.pause()
+      if (newPlaying) {
+        audioEl.play()
+        playLyric()
+      } else {
+        audioEl.pause()
+        stopLyric()
+      }
     })
 
     function goBack() {
@@ -195,6 +222,7 @@ export default {
         return
       }
       songReady.value = true
+      playLyric()
     }
     function error() {
       songReady.value = true
@@ -207,6 +235,8 @@ export default {
     function onProgressChanging(progress) {
       progressChanging = true
       currentTime.value = currentSong.value.duration * progress
+      playLyric()
+      stopLyric()
     }
 
     function onProgressChanged(progress) {
@@ -215,6 +245,7 @@ export default {
       if (!playing.value) {
           store.commit('setPlayingState', true)
       }
+      playLyric()
     }
     function end() {
       currentTime.value = 0
@@ -254,7 +285,12 @@ export default {
       // useCD
       cdCls,
       cdRef,
-      cdImageRef
+      cdImageRef,
+      // useLyric
+      currentLineNum,
+      currentLyric,
+      lyricScrollRef,
+      lyricListRef
     }
   }
 }
@@ -359,6 +395,33 @@ export default {
           }
           }
 
+        }
+        .middle-r {
+          display: inline-block;
+          vertical-align: top;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          .lyric-wrapper {
+            width: 80%;
+            margin: 0 auto;
+            overflow: hidden;
+            text-align: center;
+            .text {
+              line-height: 32px;
+              color: $color-text-l;
+              font-size: $font-size-medium;
+              &.current {
+                color: $color-text;
+              }
+            }
+            .pure-music {
+              padding-top: 50%;
+              line-height: 32px;
+              color: $color-text-l;
+              font-size: $font-size-medium;
+            }
+          }
         }
       }
       .bottom {
