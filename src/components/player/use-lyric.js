@@ -6,6 +6,8 @@ import Lyric from 'lyric-parser'
 export default function useLyric({ songReady, currentTime }) {
   const currentLyric = ref(null)
   const currentLineNum = ref(0)
+  const pureMusicLyric = ref('')
+  const playingLyric = ref('')
   const lyricScrollRef = ref(null)
   const lyricListRef = ref(null)
 
@@ -19,20 +21,27 @@ export default function useLyric({ songReady, currentTime }) {
     stopLyric()
     currentLyric.value = null
     currentLineNum.value = 0
+    playingLyric.value = ''
+    pureMusicLyric.value = ''
 
     const lyric = await getLyric(newSong)
     store.commit('addSongLyric', {
       song: newSong,
       lyric
     })
-    console.log(lyric)
+
     if (currentSong.value.lyric !== lyric) {
       return
     }
     currentLyric.value = new Lyric(lyric, handleLyric)
-
-    if (songReady.value) {
-      playLyric()
+    const hasLyric = currentLyric.value.lines.length
+    if (hasLyric) {
+      if (songReady.value) {
+        playLyric()
+      }
+    } else {
+      playingLyric.value = pureMusicLyric.value = lyric.replace(/\[(\d{2}):(\d{2}):(\d{2})\]/g, '')
+      console.log('pureMusicLyric', pureMusicLyric)
     }
   })
 
@@ -50,8 +59,9 @@ export default function useLyric({ songReady, currentTime }) {
     }
   }
 
-  function handleLyric({ lineNum }) {
+  function handleLyric({ lineNum, txt }) {
     currentLineNum.value = lineNum
+    playingLyric.value = txt
     const scrollComp = lyricScrollRef.value
     const listEl = lyricListRef.value
     if (!listEl) {
@@ -68,6 +78,8 @@ export default function useLyric({ songReady, currentTime }) {
   return {
     currentLyric,
     currentLineNum,
+    pureMusicLyric,
+    playingLyric,
     lyricScrollRef,
     lyricListRef,
     playLyric,

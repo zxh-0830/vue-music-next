@@ -3,6 +3,7 @@
     <index-list
       :data="singers"
       @select="selectSinger"
+      @click="handleClick"
     >
     </index-list>
     <router-view v-slot="{ Component }">
@@ -35,11 +36,15 @@ export default {
   },
   methods: {
     selectSinger(singer) {
+      // console.log('selectSinger', singer)
       this.selectedSinger = singer
       this.cacheSinger(singer)
       this.$router.push({
         path: `/singer/${singer.mid}`
       })
+    },
+    handleClick(e) {
+      // console.log('handleClick', e)
     },
     cacheSinger(singer) {
       storage.session.set(SINGER_KEY, singer)
